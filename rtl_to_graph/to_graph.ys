@@ -1,0 +1,4 @@
+read -sv outputs/sv2v_out.v
+hierarchy -top hier_top
+proc; opt;
+show -format dot -prefix outputs/graphs/hier_top

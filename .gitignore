@@ -127,3 +127,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+outputs/yosys_log.txt
+*.pdf
+*.dot
+outputs/sv2v_out.v
