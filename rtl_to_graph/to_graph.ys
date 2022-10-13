@@ -1,4 +1,9 @@
 read -sv outputs/sv2v_out.v
 hierarchy -top hier_top
-proc; opt;
-show -format dot -prefix outputs/graphs/hier_top
+proc; opt
+pmuxtree
+show -width -format dot -prefix outputs/graphs/hier_top
+
+synth; opt
+abc -dff -g AND
+show -format dot -prefix outputs/graphs/hier_top_aig
