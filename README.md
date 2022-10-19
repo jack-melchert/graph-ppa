@@ -9,6 +9,6 @@ python graph_analysis/graph_ppa.py -d outputs/graphs/<top level module>.dot # Th
 
 Example:
 ```
-bash design_to_pdf.sh examples/GcdUnit.v GcdUnit
+bash design_to_pdf.sh examples/GcdUnit-demo.v GcdUnit
 python graph_analysis/graph_ppa.py -d outputs/graphs/GcdUnit.dot 
 ```
