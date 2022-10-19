@@ -37,40 +37,6 @@ op_costs = {
 }
 
 
-# op_costs = {
-#     "$add": {"crit_path": 0, "area": 48.9, "energy": 0},
-#     "$and": {"crit_path": 0, "area": , "energy": 0},
-#     "$div": {"crit_path": 0, "area": , "energy": 0},
-#     "$eq": {"crit_path": 0, "area": 6.4, "energy": 0},
-#     "$eqx": {"crit_path": 0, "area": 6.4, "energy": 0},
-#     "$ge": {"crit_path": 0, "area": 8.3, "energy": 0},
-#     "$gt": {"crit_path": 0, "area": 8.3, "energy": 0},
-#     "$le": {"crit_path": 0, "area": 8.3, "energy": 0},
-#     "$logic_and": {"crit_path": 0, "area": , "energy": 0},
-#     "$logic_or": {"crit_path": 0, "area": , "energy": 0},
-#     "$lt": {"crit_path": 0, "area": 8.3, "energy": 0},
-#     "$mod": {"crit_path": 0, "area":  , "energy": 0},
-#     "$mul": {"crit_path": 0, "area": 170.39, "energy": 0},
-#     "$ne": {"crit_path": 0, "area": 6.4, "energy": 0},
-#     "$nex": {"crit_path": 0, "area": 6.4, "energy": 0},
-#     "$or": {"crit_path": 0, "area": , "energy": 0},
-#     "$shl": {"crit_path": 0, "area": , "energy": 0},
-#     "$shr": {"crit_path": 0, "area": 17.08, "energy": 0},
-#     "$sshl": {"crit_path": 0, "area": , "energy": 0},
-#     "$sshr": {"crit_path": 0, "area": 20.52, "energy": 0},
-#     "$sub": {"crit_path": 0, "area": 48.9, "energy": 0},
-#     "$xnor": {"crit_path": 0, "area": , "energy": 0},
-#     "$xor": {"crit_path": 0, "area": , "energy": 0},
-#     "$mux": {"crit_path": 0, "area": 5.68, "energy": 0},
-#     "$dff": {"crit_path": 0, "area": , "energy": 0},
-#     "$dffe": {"crit_path": 0, "area": , "energy": 0},
-#     "$sdff": {"crit_path": 0, "area": , "energy": 0},
-#     "$not": {"crit_path": 0, "area": "energy": 0},
-#     "$logic_not": {"crit_path": 0, "area": "energy": 0},
-#     "$neg": {"crit_path": 0, "area": , "energy": 0},
-# }
-
-
 def graph_to_dot(graph, outfilename):
     nx.drawing.nx_agraph.write_dot(graph, outfilename)
 
