@@ -28,7 +28,7 @@ def calculate_area(graph):
                 print("Unknown primitive block", l)
 
 
-    print(total_area)
+    print("Total Predictied Area:", total_area)
 
 
 def construct_primtive_graph(graph, subgraphs):
