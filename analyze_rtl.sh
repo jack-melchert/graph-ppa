@@ -19,11 +19,16 @@ gvpack -u outputs/graphs/${DESIGN_TOP}.dot -o outputs/graphs/${DESIGN_TOP}_new.d
 sed -i 's/subgraph /subgraph cluster_/g' outputs/graphs/${DESIGN_TOP}_new.dot
 sed -i 's/subgraph cluster_"/subgraph "cluster_/g' outputs/graphs/${DESIGN_TOP}_new.dot
 mv outputs/graphs/${DESIGN_TOP}_new.dot outputs/graphs/${DESIGN_TOP}.dot
-dot -Tpdf outputs/graphs/${DESIGN_TOP}.dot  > outputs/pdfs/${DESIGN_TOP}.pdf
+#dot -Tpdf outputs/graphs/${DESIGN_TOP}.dot  > outputs/pdfs/${DESIGN_TOP}.pdf
 
 echo "Graph printing for aig graph"
-gvpack -u outputs/graphs/${DESIGN_TOP}_aig.dot -o outputs/graphs/${DESIGN_TOP}_aig_new.dot
-sed -i 's/subgraph /subgraph cluster_/g' outputs/graphs/${DESIGN_TOP}_aig_new.dot
-sed -i 's/subgraph cluster_"/subgraph "cluster_/g' outputs/graphs/${DESIGN_TOP}_aig_new.dot
-mv outputs/graphs/${DESIGN_TOP}_aig_new.dot outputs/graphs/${DESIGN_TOP}_aig.dot
+#gvpack -u outputs/graphs/${DESIGN_TOP}_aig.dot -o outputs/graphs/${DESIGN_TOP}_aig_new.dot
+#sed -i 's/subgraph /subgraph cluster_/g' outputs/graphs/${DESIGN_TOP}_aig_new.dot
+#sed -i 's/subgraph cluster_"/subgraph "cluster_/g' outputs/graphs/${DESIGN_TOP}_aig_new.dot
+#mv outputs/graphs/${DESIGN_TOP}_aig_new.dot outputs/graphs/${DESIGN_TOP}_aig.dot
 # dot -Tpdf outputs/graphs/${DESIGN_TOP}_aig.dot > outputs/pdfs/${DESIGN_TOP}_aig.pdf
+
+
+python graph_analysis/graph_ppa.py -d outputs/graphs/${DESIGN_TOP}.dot
+
+# dot -Tpdf outputs/graphs/${DESIGN_TOP}_flattened.dot > outputs/pdfs/${DESIGN_TOP}_flattened.pdf
