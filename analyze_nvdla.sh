@@ -19,9 +19,6 @@ sed -i 's/subgraph /subgraph cluster_/g' outputs/graphs/${DESIGN_TOP}_new.dot
 sed -i 's/subgraph cluster_"/subgraph "cluster_/g' outputs/graphs/${DESIGN_TOP}_new.dot
 mv outputs/graphs/${DESIGN_TOP}_new.dot outputs/graphs/${DESIGN_TOP}.dot
 
-python graph_analysis/graph_ppa.py -d outputs/graphs/${DESIGN_TOP}.dot
+python graph_analysis/graph_ppa.py -d outputs/graphs/${DESIGN_TOP}.dot -f $FILENAME
 
-# dot -Tpdf outputs/graphs/${DESIGN_TOP}_flattened.dot > outputs/pdfs/${DESIGN_TOP}_flattened2.pdf
-
-
-
+# dot -Tpdf outputs/graphs/${DESIGN_TOP}_flattened.dot > outputs/pdfs/${DESIGN_TOP}_flattened.pdf

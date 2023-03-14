@@ -110,7 +110,7 @@ op_costs_fast = {
     "$logic_and": {"delay": 0.2, "area": 2.177, "reg": False},
     "$logic_or": {"delay": 0.2, "area": 2.17, "reg": False},
     "$lt": {"delay": 0.2, "area": 9.717, "reg": False},
-    "$mod": {"delay": 1.0, "area": 706.810 , "reg": False},
+    "$mod": {"delay": 1.0, "area": 706.810, "reg": False},
     "$mul": {"delay": 0.5, "area": 245.7, "reg": False},
     "$ne": {"delay": 0.2, "area": 5.52, "reg": False},
     "$nex": {"delay": 0.2, "area": 5.52, "reg": False},
@@ -143,7 +143,7 @@ op_costs_slow = {
     "$logic_and": {"delay": 1.0, "area": 2.177, "reg": False},
     "$logic_or": {"delay": 1.0, "area": 2.177, "reg": False},
     "$lt": {"delay": 1.0, "area": 7.620, "reg": False},
-    "$mod": {"delay": 1.0, "area": 706.810 , "reg": False},
+    "$mod": {"delay": 1.0, "area": 706.810, "reg": False},
     "$mul": {"delay": 1.0, "area": 212.9, "reg": False},
     "$ne": {"delay": 1.0, "area": 5.524, "reg": False},
     "$nex": {"delay": 1.0, "area": 5.524, "reg": False},
@@ -187,8 +187,16 @@ def load_dot(filename):
 
     return graphs[graph_name], graphs
 
+def is_prim_mod(l):
+    prims = {"DW02_tree"}
+    return "$" in l or l in prims
+
+def is_module(data):
+    return "shape" in data and data["shape"] == "record" and "style" not in data
+
 def get_module_from_label(label):
     return label.split("}|")[1].split("|{")[0].split("\\n")[1]
+
 
 def get_node_info(graph, node, data):
     if "shape" in data and data["shape"] == "record" and "style" not in data:
@@ -200,18 +208,19 @@ def get_node_info(graph, node, data):
                 bw = max(bw, int(edge[0]['label'].split("<")[1].split(">")[0]))
 
         l = get_module_from_label(data["label"])
-        
+
         if l in op_costs:
             ret = op_costs[l]
             ret["type"] = l
             ret["bw"] = bw
             return op_costs[l]
-                
+
+
 class PathComponents:
     def __init__(
         self,
         arrival=[],
-        block_type = [],
+        block_type=[],
         parent=None,
     ):
         self.arrival = arrival
@@ -223,8 +232,9 @@ class PathComponents:
 
     def print(self):
         print("\tCritical Path:")
-        for a in zip(self.arrival,self.block_type):
+        for a in zip(self.arrival, self.block_type):
             print("\t\t" + str(a))
+
 
 def break_at_regs(g):
     graph = g.copy()
@@ -236,11 +246,40 @@ def break_at_regs(g):
             if hw_info["reg"]:
                 for succ in g.successors(node):
                     graph.remove_edge(node, succ)
-        # else:
-        #     breakpoint()
 
     return graph
 
+
+def dfs_visit_recursively(g, node, nodes_color, edges_to_be_removed):
+
+    nodes_color[node] = 1
+    succ = list(g.successors(node))
+
+    for child in succ:
+        if nodes_color[child] == 0:
+                dfs_visit_recursively(g, child, nodes_color, edges_to_be_removed)
+        elif nodes_color[child] == 1:
+            edges_to_be_removed.append((node,child))
+
+    nodes_color[node] = 2
+
+
+def break_cycles(g):
+    nodes_color = {}
+    edges_to_be_removed = []
+
+    for node in g.nodes:
+        nodes_color[node] = 0
+
+    for node in g.nodes:
+        if nodes_color[node] == 0:
+            dfs_visit_recursively(g, node, nodes_color, edges_to_be_removed)
+
+
+    for edge in edges_to_be_removed:
+        g.remove_edge(edge[0], edge[1])
+
+    return g
 
 def simplify_graph(graph):
     for node, data in graph.copy().nodes(data=True):
@@ -275,3 +314,23 @@ def simplify_graph(graph):
 
 
             graph.remove_node(node)
+
+
+def get_port_labels(graph):
+    labels = {}
+    iport_labels = {}
+    oport_labels = {}
+    for node, data in graph.nodes(data=True):
+        if is_module(data):
+            labels[node] = get_module_from_label(data["label"])
+            iports = {}
+            for p in data["label"].split("}|")[0].split("{")[-1].split("|"):
+                if p != "":
+                    iports[p.split(" ")[0].replace("<", "").replace(">", "")] = p.split(" ")[1]
+            iport_labels[node] = iports
+            oports = {}
+            for p in data["label"].split("|{")[-1].split("}")[0].split("|"):
+                if p != "":
+                    oports[p.split(" ")[0].replace("<", "").replace(">", "")] = p.split(" ")[1]
+            oport_labels[node] = oports
+    return labels, iport_labels, oport_labels

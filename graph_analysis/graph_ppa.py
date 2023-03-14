@@ -1,4 +1,5 @@
 from graph_utils.utils import * 
+from graph_utils.synthesis import * 
 import argparse
 import os
 import networkx as nx
@@ -8,7 +9,7 @@ def calculate_area(graph, crit_nodes):
     area_set = set()
     total_area = 0
     for node, data in graph.nodes(data=True):
-        if "shape" in data and data["shape"] == "record" and "style" not in data:
+        if is_module(data):
             bw = 1
             for pred in graph.predecessors(node):
                 edge = graph.get_edge_data(pred, node)
@@ -21,12 +22,6 @@ def calculate_area(graph, crit_nodes):
             if l in op_costs:
                 total_area += op_costs[l]["area"]
                 area_set.add(l)
-                # if op_costs[l]["area"] == 0:
-                #     print("\tArea of this component is 0")
-                    # else:
-                    #     total_area += op_costs[l]["area"]
-            # else:
-            #     print("Unknown primitive block", l)
 
     compile_time = 0
     for s in area_set:
@@ -40,7 +35,7 @@ def calculate_power(graph):
     power_set = set()
     total_power = 0
     for node, data in graph.nodes(data=True):
-        if "shape" in data and data["shape"] == "record" and "style" not in data:
+        if is_module(data):
             bw = 1
             for pred in graph.predecessors(node):
                 edge = graph.get_edge_data(pred, node)
@@ -52,14 +47,7 @@ def calculate_power(graph):
             
             if l in op_costs:
                 total_power += op_costs[l]["power"]
-                # print(l, op_costs[l]["power"])
                 power_set.add(l)
-                # if op_costs[l]["power"] == 0:
-                #     print("\tpower of this component is 0")
-                    # else:
-                    #     total_power += op_costs[l]["power"]
-            # else:
-            #     print("Unknown primitive block", l)
 
     compile_time = 0
     for s in power_set:
@@ -70,32 +58,18 @@ def calculate_power(graph):
     print("Total Predictied Compile Time:", compile_time)
 
 
+
 def flatten(graph, subgraphs, flatten_levels):
 
+    unknown_set = set()
     print("Started with", graph.number_of_nodes(), "nodes")
     idx = 0
 
     for _ in range(flatten_levels):
-        labels = {}
-        iport_labels = {}
-        oport_labels = {}
-        for node, data in graph.nodes(data=True):
-            if "shape" in data and data["shape"] == "record" and "style" not in data:
-                labels[node] = get_module_from_label(data["label"])
-                iports = {}
-                for p in data["label"].split("}|")[0].split("{")[-1].split("|"):
-                    if p != "":
-                        iports[p.split(" ")[0].replace("<", "").replace(">", "")] = p.split(" ")[1]
-                iport_labels[node] = iports
-                oports = {}
-                for p in data["label"].split("|{")[-1].split("}")[0].split("|"):
-                    if p != "":
-                        oports[p.split(" ")[0].replace("<", "").replace(">", "")] = p.split(" ")[1]
-                oport_labels[node] = oports
+        labels, iport_labels, oport_labels = get_port_labels(graph)
 
         for lnode, l  in labels.items():
             if l in subgraphs:
-                print("Flattening", l)
                 subgraph = nx.relabel_nodes(subgraphs[l], lambda x: x + f"_{idx}")
                 idx += 1
                 graph.update(subgraph)
@@ -122,8 +96,11 @@ def flatten(graph, subgraphs, flatten_levels):
                                 graph.add_edge(onode, succ)
                                 break
                 graph.remove_node(lnode)
-            else:
-                print("Found unknown node with no definition", l)
+            elif "$" not in l:
+                unknown_set.add(l)
+    
+    if len(unknown_set) > 0:
+        print("Found unknown nodes with no definition", unknown_set)
 
     print("Ended with", graph.number_of_nodes(), "nodes")
 
@@ -138,7 +115,7 @@ def construct_primtive_graph(graph, subgraphs):
         iport_labels = {}
         oport_labels = {}
         for node, data in graph.nodes(data=True):
-            if "shape" in data and data["shape"] == "record" and "style" not in data:
+            if is_module(data):
                 labels[node] = get_module_from_label(data["label"])
                 iports = {}
                 for p in data["label"].split("}|")[0].split("{")[-1].split("|"):
@@ -258,6 +235,7 @@ def find_critical_path(g):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dotfile", help="dot filename", required=True)
+    parser.add_argument("-f", "--folder", help="folder for verilog files", required=True)
     args = parser.parse_args()
     graph, subgraphs = load_dot(args.dotfile)
     graph_name = os.path.splitext(os.path.basename(args.dotfile))[0]
@@ -270,10 +248,11 @@ def main():
 
     print("Analysis")
     # crit_nodes = find_critical_path(graph)
-    crit_nodes = []
+    # crit_nodes = []
 
-    calculate_area(graph, crit_nodes)
-    calculate_power(graph)
+    run_synth(graph, args.folder)
+    # calculate_area(graph, crit_nodes)
+    # calculate_power(graph)
 
 
 if __name__ == "__main__":
