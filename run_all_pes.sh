@@ -1,6 +1,7 @@
-
-for PE in pe_ml pe_ip2 pe_ip3 pe_c pe_ip pe_h pe_u pe_g 
-do
-    OUTPUT=$(bash analyze_rtl.sh examples/$PE.v PE_gen 2>&1 |  tail -1)
-    echo $OUTPUT
-done
+# bash analyze_nvdla.sh examples/nvdla/cmac NV_NVDLA_cmac | tee -a switching_power_flat_2_2.txt
+# bash analyze_nvdla.sh examples/nvdla/cmac NV_NVDLA_CMAC_core | tee -a switching_power_flat_2_2.txt
+# bash analyze_nvdla.sh examples/nvdla/sdp NV_NVDLA_sdp | tee -a switching_power_flat_2_2.txt
+# bash analyze_nvdla.sh examples/nvdla/sdp NV_NVDLA_SDP_core | tee -a debug_sdp_core.txt
+# bash analyze_nvdla.sh examples/nvdla/sdp NV_NVDLA_SDP_wdma | tee -a switching_power_flat_2_2.txt
+# bash analyze_nvdla.sh examples/nvdla/pdp NV_NVDLA_pdp | tee -a switching_power_flat_2_2.txt
+bash analyze_nvdla.sh examples/nvdla/pdp NV_NVDLA_PDP_core 

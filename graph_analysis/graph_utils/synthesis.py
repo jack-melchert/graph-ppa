@@ -80,22 +80,38 @@ def parse_node_synth(mod):
             time = float(line.strip().split()[-1])
 
         if "Cell Leakage Power" in line:
-            if "u" in line.split()[5]:
-                leakage_power = float(line.split()[4]) * 10**-6
-            elif "m" in line.split()[5]:
+            if "m" in line.split()[5]:
                 leakage_power = float(line.split()[4]) * 10**-3
+            elif "u" in line.split()[5]:
+                leakage_power = float(line.split()[4]) * 10**-6
             elif "n" in line.split()[5]:
                 leakage_power = float(line.split()[4]) * 10**-9
+            elif "p" in line.split()[5]:
+                leakage_power = float(line.split()[4]) * 10**-12
+            elif "f" in line.split()[5]:
+                leakage_power = float(line.split()[4]) * 10**-15
+            elif line.split()[5].strip() == "W":
+                leakage_power = float(line.split()[4])
+            else:
+                breakpoint()
 
         if "Total Dynamic Power" in line:
-            if "u" in line.split()[5]:
-                switching_power = float(line.split()[4]) * 10**-6
-            elif "m" in line.split()[5]:
+            if "m" in line.split()[5]:
                 switching_power = float(line.split()[4]) * 10**-3
+            elif "u" in line.split()[5]:
+                switching_power = float(line.split()[4]) * 10**-6
             elif "n" in line.split()[5]:
                 switching_power = float(line.split()[4]) * 10**-9
+            elif "p" in line.split()[5]:
+                switching_power = float(line.split()[4]) * 10**-12
+            elif "f" in line.split()[5]:
+                switching_power = float(line.split()[4]) * 10**-15
+            elif line.split()[5].strip() == "W":
+                switching_power = float(line.split()[4])
+            else:
+                breakpoint()
 
-    if name is None or area is None or time is None or leakage_power is None:
+    if name is None or area is None or time is None or leakage_power is None or switching_power is None:
         breakpoint()
 
     assert name == mod, f"{name} {mod}"
@@ -130,6 +146,8 @@ def calculate_area_power(graph, node_info):
             if l in node_info:
                 total_area += node_info[l]["area"]
                 total_leakage_power += node_info[l]["leakage_power"]
+                if node_info[l]["switching_power"] is None:
+                    node_info[l]["switching_power"] = 0.0
                 total_switching_power += node_info[l]["switching_power"]
                 area_set.add(l)
 
@@ -196,7 +214,7 @@ def run_synth(graph, folder):
                         if len(list(graph.successors(node_sink))) == 0:
                             node_sink = None
                             break
-                        assert len(list(graph.successors(node_sink))) == 1
+                        assert len(list(graph.successors(node_sink))) > 0, breakpoint()
                         succ = list(graph.successors(node_sink))[0]
                         node_sink_edge = graph.edges[node_sink, succ, 0]
                         node_sink = succ
