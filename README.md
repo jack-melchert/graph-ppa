@@ -29,5 +29,5 @@ The final area will be printed and the .dot file will be placed in ```outputs/gr
 
 ### Example:
 ```
-bash analyze_rtl.sh -flist examples/pe_c.flist -design PE_gen -sv2v
+bash analyze_rtl.sh -flist examples/pe_c.f -design PE_gen -sv2v
 ```
