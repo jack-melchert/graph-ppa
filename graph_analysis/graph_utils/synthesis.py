@@ -1,12 +1,16 @@
 import networkx as nx
-from graph_utils.utils import * 
+from graph_utils.utils import *
 import subprocess
 import glob
 import time
+import os
+
+result_dir = os.path.dirname(os.path.realpath(__file__)) + "/../../outputs/synth/"
+
 
 def write_switching(switching, filename):
 
-    fout = open(filename, 'w')
+    fout = open(filename, "w")
 
     lines = ""
     if switching is not None:
@@ -18,54 +22,57 @@ def write_switching(switching, filename):
 
     fout.close()
 
-def node_synth(node, folder, switching):
+
+def node_synth(node, switching, flist, include):
     print("Running synth for", node)
-    folder = folder.split("/")[-1]
 
-    top_names = f'export TOP_NAMES="{node}"\n'
-    # rtl_search_path = f'export RTL_SEARCH_PATH="/nobackup/melchert/qualcomm/hw/vmod/nvdla/{folder} /nobackup/melchert/qualcomm/hw/vmod/vlibs /nobackup/melchert/qualcomm/hw/vmod/rams/model/ /nobackup/melchert/qualcomm/hw/outdir/nv_full/vmod/rams/synth/"\n'
-    synth_script_filename = "/nobackup/melchert/qualcomm/hw/syn/scripts/default_config.sh"
+    top_level_path = os.path.dirname(os.path.realpath(__file__)) + "/../.."
 
-    fin = open(synth_script_filename, 'r')
+    synth_script_filename = top_level_path + "/synthesis/config.sh"
+
+    flist_in = open(flist, "r")
+
+    rtl_files = ""
+
+    for f in flist_in.readlines():
+        rtl_files += f.strip() + " "
+
+    # Writing node we are currently synthing to synth script
+    fin = open(synth_script_filename, "r")
     new_synth_script = fin.readlines()
+    top_names = f'export TOP_NAMES="{node}"\n'
+    rtl_verilog = f'export RTL_VERILOG="{rtl_files}"\n'
+    rtl_include_path = f'export RTL_INCLUDE_SEARCH_PATH="{include}"\n'
 
     for idx, line in enumerate(new_synth_script):
         if "export TOP_NAMES=" in line:
             new_synth_script[idx] = top_names
-        # elif "export RTL_SEARCH_PATH=" in line:
-        #     new_synth_script[idx] = rtl_search_path
-
+        elif "export RTL_VERILOG=" in line:
+            new_synth_script[idx] = rtl_verilog
+        elif "export RTL_INCLUDE_SEARCH_PATH=" in line:
+            new_synth_script[idx] = rtl_include_path
     fin.close()
 
-    fout = open(synth_script_filename, 'w')
+    fout = open(synth_script_filename, "w")
     fout.writelines(new_synth_script)
     fout.close()
 
-    switching_filename = "/nobackup/melchert/qualcomm/hw/syn/scripts/set_switching.tcl"
-
+    switching_filename = top_level_path + "/synthesis/set_switching.tcl"
     write_switching(switching, switching_filename)
 
-    synth_command = ["bash", "syn/scripts/syn_launch.sh", "-config", "syn/scripts/default_config.sh"]
+    # Run synthesis
+    synth_command = ["bash", top_level_path + "/synthesis/launch_synth.sh"]
 
     start = time.time()
-    subprocess.check_call(
-        synth_command,
-        cwd="/nobackup/melchert/qualcomm/hw"
-    )
+    subprocess.check_call(synth_command, cwd="/nobackup/melchert/qualcomm/hw")
     end = time.time()
 
     return end - start
 
-def parse_node_synth(mod):
-    result_dir = "/nobackup/melchert/qualcomm/hw/"
-    dirs = glob.glob(result_dir + "nvdla_syn_*")
-    dirs.sort()
-    folder = dirs[-1]
-    
-    final_files = glob.glob(folder + "/report/*final.report")
 
-    filename = final_files[-1]
-    fin = open(filename, 'r')
+def parse_node_synth(mod, filename):
+
+    fin = open(filename, "r")
     name = None
     area = None
     time = None
@@ -93,7 +100,7 @@ def parse_node_synth(mod):
             elif line.split()[5].strip() == "W":
                 leakage_power = float(line.split()[4])
             else:
-                breakpoint()
+                assert False, f"Did not recognize leakage power result in {line}"
 
         if "Total Dynamic Power" in line:
             if "m" in line.split()[5]:
@@ -109,16 +116,28 @@ def parse_node_synth(mod):
             elif line.split()[5].strip() == "W":
                 switching_power = float(line.split()[4])
             else:
-                breakpoint()
+                assert False, f"Did not recognize dynamic power result in {line}"
 
-    if name is None or area is None or time is None or leakage_power is None or switching_power is None:
-        breakpoint()
+    if (
+        name is None
+        or area is None
+        or time is None
+        or leakage_power is None
+        or switching_power is None
+    ):
+        assert False, f"Synthesis reports are not complete for node {mod}"
 
-    assert name == mod, f"{name} {mod}"
+    assert name == mod, f"{name} did not match {mod}"
 
     fin.close()
 
-    return {"area": area, "compile_time": time, "leakage_power": leakage_power, "switching_power": switching_power}
+    return {
+        "area": area,
+        "compile_time": time,
+        "leakage_power": leakage_power,
+        "switching_power": switching_power,
+    }
+
 
 def sort_nodes(graph):
     while not nx.is_directed_acyclic_graph(graph):
@@ -138,11 +157,11 @@ def calculate_area_power(graph, node_info):
             for pred in graph.predecessors(node):
                 edge = graph.get_edge_data(pred, node)
 
-                if 'label' in edge[0]:
-                    bw = max(bw, int(edge[0]['label'].split("<")[1].split(">")[0]))
+                if "label" in edge[0]:
+                    bw = max(bw, int(edge[0]["label"].split("<")[1].split(">")[0]))
 
             l = get_module_from_label(data["label"])
-            
+
             if l in node_info:
                 total_area += node_info[l]["area"]
                 total_leakage_power += node_info[l]["leakage_power"]
@@ -161,19 +180,11 @@ def calculate_area_power(graph, node_info):
     print("Total Predictied switching power:", total_switching_power)
     print("Total Predictied Compile Time:", compile_time)
 
-def parse_switching():
+
+def parse_switching(filename):
     switching = {}
 
-    result_dir = "/nobackup/melchert/qualcomm/hw/"
-    dirs = glob.glob(result_dir + "nvdla_syn_*")
-    dirs.sort()
-
-    folder = dirs[-1]
-    
-    final_files = glob.glob(folder + "/report/*.switching")
-
-    filename = final_files[-1]
-    fin = open(filename, 'r')
+    fin = open(filename, "r")
 
     for line in fin.readlines():
         if "type = " in line:
@@ -187,7 +198,8 @@ def parse_switching():
 
     return switching
 
-def run_synth(graph, folder):
+
+def run_synth(graph, flist, include):
     labels, iport_labels, oport_labels = get_port_labels(graph)
 
     nodes = sort_nodes(graph)
@@ -198,15 +210,22 @@ def run_synth(graph, folder):
     for n in nodes:
         data = graph.nodes(data=True)[n]
         if is_module(data):
-            mod = get_module_from_label(data['label'])
+            mod = get_module_from_label(data["label"])
             if not is_prim_mod(mod) and mod not in node_info:
-                synth_time = node_synth(mod, folder, switching_info.get(n))
-                node_info[mod] = parse_node_synth(mod)
+                synth_time = node_synth(mod, switching_info.get(n), flist, include)
+
+                dirs = glob.glob(result_dir + "synth_*")
+                dirs.sort()
+                folder = dirs[-1]
+                synth_file = glob.glob(folder + "/report/*final.report")[-1]
+                switching_file = glob.glob(folder + "/report/*.switching")[-1]
+
+                node_info[mod] = parse_node_synth(mod, synth_file)
                 node_info[mod]["compile_time"] = synth_time
-                switching = parse_switching()
+                switching = parse_switching(switching_file)
 
                 for source, sink, data in graph.out_edges(n, data=True):
-                    
+
                     node_sink = sink
                     node_sink_edge = data
 
@@ -218,22 +237,20 @@ def run_synth(graph, folder):
                         succ = list(graph.successors(node_sink))[0]
                         node_sink_edge = graph.edges[node_sink, succ, 0]
                         node_sink = succ
-                    
+
                     if node_sink == None:
                         continue
-                    
+
                     if node_sink not in switching_info:
                         switching_info[node_sink] = []
 
-                    try:
-                        out_port_name = data['tailport'].split(":")[0]
-                        in_port_name = node_sink_edge['headport'].split(":")[0]
-                        oport = oport_labels[source][out_port_name]
-                        iport = iport_labels[node_sink][in_port_name]
+                    out_port_name = data["tailport"].split(":")[0]
+                    in_port_name = node_sink_edge["headport"].split(":")[0]
+                    oport = oport_labels[source][out_port_name]
+                    iport = iport_labels[node_sink][in_port_name]
 
-                        oswitching = switching[oport]
-                    except:
-                        breakpoint()
+                    oswitching = switching[oport]
+
                     iswitching = []
                     for s in oswitching:
                         iswitching.append((s[0].replace(oport, iport), s[1], s[2]))

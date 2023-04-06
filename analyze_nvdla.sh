@@ -1,5 +1,6 @@
 FILENAME=$1
 DESIGN_TOP=$2
+FLATTEN=$3
 
 mkdir -p outputs
 mkdir -p outputs/pdfs
@@ -19,6 +20,6 @@ sed -i 's/subgraph /subgraph cluster_/g' outputs/graphs/${DESIGN_TOP}_new.dot
 sed -i 's/subgraph cluster_"/subgraph "cluster_/g' outputs/graphs/${DESIGN_TOP}_new.dot
 mv outputs/graphs/${DESIGN_TOP}_new.dot outputs/graphs/${DESIGN_TOP}.dot
 
-python graph_analysis/graph_ppa.py -d outputs/graphs/${DESIGN_TOP}.dot -f $FILENAME
+python graph_analysis/graph_ppa.py -g outputs/graphs/${DESIGN_TOP}.dot -d $FILENAME -f $FLATTEN
 
 # dot -Tpdf outputs/graphs/${DESIGN_TOP}_flattened.dot > outputs/pdfs/${DESIGN_TOP}_flattened.pdf

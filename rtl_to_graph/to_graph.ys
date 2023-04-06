@@ -1,4 +1,3 @@
-read -sv outputs/sv2v_out.v
 hierarchy -top hier_top
 proc
 pmuxtree

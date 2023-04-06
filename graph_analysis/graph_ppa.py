@@ -1,9 +1,10 @@
-from graph_utils.utils import * 
-from graph_utils.synthesis import * 
+from graph_utils.utils import *
+from graph_utils.synthesis import *
 import argparse
 import os
 import networkx as nx
 import copy
+
 
 def calculate_area(graph, crit_nodes):
     area_set = set()
@@ -14,11 +15,11 @@ def calculate_area(graph, crit_nodes):
             for pred in graph.predecessors(node):
                 edge = graph.get_edge_data(pred, node)
 
-                if 'label' in edge[0]:
-                    bw = max(bw, int(edge[0]['label'].split("<")[1].split(">")[0]))
+                if "label" in edge[0]:
+                    bw = max(bw, int(edge[0]["label"].split("<")[1].split(">")[0]))
 
             l = get_module_from_label(data["label"])
-            
+
             if l in op_costs:
                 total_area += op_costs[l]["area"]
                 area_set.add(l)
@@ -31,6 +32,7 @@ def calculate_area(graph, crit_nodes):
     print("Total Predictied Area:", total_area)
     print("Total Predictied Compile Time:", compile_time)
 
+
 def calculate_power(graph):
     power_set = set()
     total_power = 0
@@ -40,11 +42,11 @@ def calculate_power(graph):
             for pred in graph.predecessors(node):
                 edge = graph.get_edge_data(pred, node)
 
-                if 'label' in edge[0]:
-                    bw = max(bw, int(edge[0]['label'].split("<")[1].split(">")[0]))
+                if "label" in edge[0]:
+                    bw = max(bw, int(edge[0]["label"].split("<")[1].split(">")[0]))
 
             l = get_module_from_label(data["label"])
-            
+
             if l in op_costs:
                 total_power += op_costs[l]["power"]
                 power_set.add(l)
@@ -58,7 +60,6 @@ def calculate_power(graph):
     print("Total Predictied Compile Time:", compile_time)
 
 
-
 def flatten(graph, subgraphs, flatten_levels):
 
     unknown_set = set()
@@ -68,7 +69,7 @@ def flatten(graph, subgraphs, flatten_levels):
     for _ in range(flatten_levels):
         labels, iport_labels, oport_labels = get_port_labels(graph)
 
-        for lnode, l  in labels.items():
+        for lnode, l in labels.items():
             if l in subgraphs:
                 subgraph = nx.relabel_nodes(subgraphs[l], lambda x: x + f"_{idx}")
                 idx += 1
@@ -98,11 +99,12 @@ def flatten(graph, subgraphs, flatten_levels):
                 graph.remove_node(lnode)
             elif "$" not in l:
                 unknown_set.add(l)
-    
+
     if len(unknown_set) > 0:
         print("Found unknown nodes with no definition", unknown_set)
 
     print("Ended with", graph.number_of_nodes(), "nodes")
+
 
 def construct_primtive_graph(graph, subgraphs):
 
@@ -120,15 +122,19 @@ def construct_primtive_graph(graph, subgraphs):
                 iports = {}
                 for p in data["label"].split("}|")[0].split("{")[-1].split("|"):
                     if p != "":
-                        iports[p.split(" ")[0].replace("<", "").replace(">", "")] = p.split(" ")[1]
+                        iports[
+                            p.split(" ")[0].replace("<", "").replace(">", "")
+                        ] = p.split(" ")[1]
                 iport_labels[node] = iports
                 oports = {}
                 for p in data["label"].split("|{")[-1].split("}")[0].split("|"):
                     if p != "":
-                        oports[p.split(" ")[0].replace("<", "").replace(">", "")] = p.split(" ")[1]
+                        oports[
+                            p.split(" ")[0].replace("<", "").replace(">", "")
+                        ] = p.split(" ")[1]
                 oport_labels[node] = oports
 
-        for lnode, l  in labels.items():
+        for lnode, l in labels.items():
             if l not in op_costs:
                 if l in subgraphs:
                     print("Flattening", l)
@@ -162,6 +168,7 @@ def construct_primtive_graph(graph, subgraphs):
                 else:
                     print("Found unknown node with no definition", l)
 
+
 def find_critical_path(g):
 
     graph = break_at_regs(g)
@@ -183,8 +190,8 @@ def find_critical_path(g):
             hw_info = get_node_info(graph, parent, graph.nodes[parent])
 
             if hw_info is not None and hw_info["bw"] >= 16:
-                comp.block_type.append(hw_info['type'])
-                comp.arrival.append(hw_info['delay'])
+                comp.block_type.append(hw_info["type"])
+                comp.arrival.append(hw_info["delay"])
 
             components.append(comp)
 
@@ -231,28 +238,27 @@ def find_critical_path(g):
     return crit_nodes
 
 
-
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--dotfile", help="dot filename", required=True)
-    parser.add_argument("-f", "--folder", help="folder for verilog files", required=True)
-    args = parser.parse_args()
-    graph, subgraphs = load_dot(args.dotfile)
-    graph_name = os.path.splitext(os.path.basename(args.dotfile))[0]
+    parser.add_argument("-g", "--graph", help="graph dot filename", required=True)
+    parser.add_argument(
+        "-l", "--flist", help="filelist used for synthesis", required=True
+    )
+    parser.add_argument("-i", "--include", help="include path for verilog synthesis")
+    parser.add_argument(
+        "-f", "--flatten", help="flatten level, default 0", type=int, default=0
+    )
 
-    # construct_primtive_graph(graph, subgraphs)
-    flatten(graph, subgraphs, 1)
+    args = parser.parse_args()
+    graph, subgraphs = load_dot(args.graph)
+    graph_name = os.path.splitext(os.path.basename(args.graph))[0]
+
+    flatten(graph, subgraphs, int(args.flatten))
 
     graph_to_dot(graph, f"outputs/graphs/{graph_name}_flattened.dot")
     simplify_graph(graph)
 
-    print("Analysis")
-    # crit_nodes = find_critical_path(graph)
-    # crit_nodes = []
-
-    run_synth(graph, args.folder)
-    # calculate_area(graph, crit_nodes)
-    # calculate_power(graph)
+    run_synth(graph, args.flist, args.include)
 
 
 if __name__ == "__main__":
