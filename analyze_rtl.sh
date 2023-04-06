@@ -1,6 +1,6 @@
 usage ()
 {
-    echo Usage: $0 -flist filelist -design module_name -flatten flatten_level -include include/path -sv2v -graph;
+    echo Usage: $0 -flist filelist -design module_name -flatten flatten_level -include include/path [-sv2v] [-graph];
     exit 1;
 }
 
