@@ -9,17 +9,27 @@ networkx
 matplotlib
 pygraphviz
 
+Synopsys Design Compiler
+
+### Setup:
+Before running the tool, please open synthesis/config.sh and modify the following variables:
+```
+RTL_SEARCH_PATH - projects often have verilog libraries or low level circuits or memories, use this specify as many of these directories as you want. They will be included when running synthesis, so add things here if you get unresolved references.
+DC_PATH - Path to design compiler
+TARGET_LIB - Path to .db library
+LINK_LIB - Verify that the default values here match the folder structure in your DC installation.
+```
+The rest of the variables in this file have defaults that should work in most cases. 
+ 
 ### Usage:
 ```
-# This will read in the .sv or .v file, load it into yosys, and generate a .dot representation in outputs/graphs/
-bash design_to_pdf.sh <verilog file> <top level module> 
-# This will run the graph based area prediction model on a .dot file
-python graph_analysis/graph_ppa.py -d outputs/graphs/<top level module>.dot 
+bash analyze_rtl.sh -flist path/to/filelist -design module_name [-sv2v] [-graph]
+  -sv2v will use the sv2v tool to convert all source files into yosys compatible verilog, use this is yosys gives an error
+  -graph will print a pdf of graph used during synthesis prediction, this may take a long time depending on the size of the design
 ```
 The final area will be printed and the .dot file will be placed in ```outputs/graphs/<top level module>_flattened.dot```
 
 ### Example:
 ```
-bash design_to_pdf.sh examples/GcdUnit-demo.v GcdUnit
-python graph_analysis/graph_ppa.py -d outputs/graphs/GcdUnit.dot 
+bash analyze_rtl.sh -flist examples/pe_c.flist -design PE_gen -sv2v
 ```
