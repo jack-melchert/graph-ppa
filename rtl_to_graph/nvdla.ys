@@ -1,6 +1,0 @@
-hierarchy -top hier_top
-proc
-pmuxtree
-opt -purge
-show -width -format dot -prefix outputs/graphs/hier_top
-
