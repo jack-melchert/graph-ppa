@@ -23,7 +23,7 @@ export DC_PATH="/cad/synopsys/syn/T-2022.03-SP4/amd64/syn/bin/"
 # ===========================
 # LIBRARY RELATED VARIABLES
 # ===========================
-export TARGET_LIB="/nobackup/melchert/mflowgen/adks/freepdk-45nm/view-tiny/stdcells.db"
+export TARGET_LIB="/nobackup/melchert/qualcomm/graph-ppa/synthesis/freepdk/stdcells.db"
 export LINK_LIB="${DC_PATH}/../../../libraries/syn/dw_foundation.sldb ${DC_PATH}/../../../libraries/syn/gtech.db ${DC_PATH}/../../../libraries/syn/standard.sldb"
 export MW_LIB=""
 export TF_FILE=""
