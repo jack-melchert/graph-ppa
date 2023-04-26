@@ -2,12 +2,10 @@
 Pre-synthesis graph based power, performance, and area estimation tool.
 ### Requirements:
 yosys: https://github.com/YosysHQ/yosys
-sv2v: https://github.com/zachjs/sv2v (I've included a binary in rtl_to_graph/)
+sv2v: https://github.com/zachjs/sv2v (I've included a binary in rtl_to_graph/, this should be all that is required unless running on a different operating system)
 
 Python packages:
-networkx
-matplotlib
-pygraphviz
+```pip install networkx matplotlib pygraphviz```
 
 Synopsys Design Compiler
 
@@ -31,5 +29,5 @@ The final area will be printed and the .dot file will be placed in ```outputs/gr
 
 ### Example:
 ```
-bash analyze_rtl.sh -flist examples/pe_c.flist -design PE_gen -sv2v
+bash analyze_rtl.sh -flist examples/pe_c.f -design PE_gen -sv2v
 ```
