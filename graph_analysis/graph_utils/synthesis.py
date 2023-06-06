@@ -4,12 +4,12 @@ import subprocess
 import glob
 import time
 import os
+import json
 
 result_dir = os.path.dirname(os.path.realpath(__file__)) + "/../../outputs/synth/"
 
 
 def write_switching(switching, filename):
-
     fout = open(filename, "w")
 
     lines = ""
@@ -23,7 +23,7 @@ def write_switching(switching, filename):
     fout.close()
 
 
-def node_synth(node, switching, flist, include):
+def node_synth(node, switching, flist, include, switching_temp):
     print("Running synth for", node)
 
     top_level_path = os.path.dirname(os.path.realpath(__file__)) + "/../.."
@@ -58,7 +58,30 @@ def node_synth(node, switching, flist, include):
     fout.close()
 
     switching_filename = top_level_path + "/synthesis/set_switching.tcl"
-    write_switching(switching, switching_filename)
+
+    switch_names = []
+    if switching is not None:
+        for x in switching:
+            for y in x:
+                switch_names.append(y[0])
+
+    new_switching = []
+    for n,v in switching_temp.items():
+        new_switching.append(v)
+
+    final_switching = []
+    for x in new_switching:
+        for y in x:
+            if y[0] in switch_names:
+                final_switching.append([y])
+
+    # if len(final_switching) > 0:
+    #     breakpoint()
+
+    write_switching(final_switching, switching_filename)
+
+
+    # subprocess.check_call(["cp", "/nobackup/melchert/qualcomm/graph-ppa/switching/"+name+".switching", switching_filename])
 
     # Run synthesis
     synth_command = ["bash", top_level_path + "/synthesis/launch_synth.sh"]
@@ -162,13 +185,13 @@ def calculate_area_power(graph, node_info):
 
             l = get_module_from_label(data["label"])
 
-            if l in node_info:
-                total_area += node_info[l]["area"]
-                total_leakage_power += node_info[l]["leakage_power"]
-                if node_info[l]["switching_power"] is None:
-                    node_info[l]["switching_power"] = 0.0
-                total_switching_power += node_info[l]["switching_power"]
-                area_set.add(l)
+            if node in node_info:
+                total_area += node_info[node]["area"]
+                total_leakage_power += node_info[node]["leakage_power"]
+                if node_info[node]["switching_power"] is None:
+                    node_info[node]["switching_power"] = 0.0
+                total_switching_power += node_info[node]["switching_power"]
+                area_set.add(node)
 
     compile_time = 0
     for s in area_set:
@@ -211,8 +234,10 @@ def run_synth(graph, flist, include):
         data = graph.nodes(data=True)[n]
         if is_module(data):
             mod = get_module_from_label(data["label"])
-            if not is_prim_mod(mod) and mod not in node_info:
-                synth_time = node_synth(mod, switching_info.get(n), flist, include)
+            if not is_prim_mod(mod) and n not in node_info:
+                switching_temp = parse_switching("/nobackup/melchert/qualcomm/graph-ppa/switching/"+name+".switching")
+
+                synth_time = node_synth(mod, switching_info.get(n), flist, include, switching_temp)
 
                 dirs = glob.glob(result_dir + "synth_*")
                 dirs.sort()
@@ -220,8 +245,8 @@ def run_synth(graph, flist, include):
                 synth_file = glob.glob(folder + "/report/*final.report")[-1]
                 switching_file = glob.glob(folder + "/report/*.switching")[-1]
 
-                node_info[mod] = parse_node_synth(mod, synth_file)
-                node_info[mod]["compile_time"] = synth_time
+                node_info[n] = parse_node_synth(mod, synth_file)
+                node_info[n]["compile_time"] = synth_time
                 switching = parse_switching(switching_file)
 
                 for source, sink, data in graph.out_edges(n, data=True):
@@ -257,4 +282,8 @@ def run_synth(graph, flist, include):
 
                     switching_info[node_sink].append(iswitching)
 
+    print(node_info)
+    node_info_fout = open("node_info.txt", "w")
+    node_info_fout.write(json.dumps(node_info))
+    node_info_fout.close()
     calculate_area_power(graph, node_info)

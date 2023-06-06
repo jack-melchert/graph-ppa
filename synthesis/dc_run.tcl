@@ -2,6 +2,12 @@
 # Setup variables/procs
 # =====================
 
+set values {NV_NVDLA_CMAC_CORE_active NV_NVDLA_CMAC_CORE_cfg NV_NVDLA_CMAC_CORE_mac_7 NV_NVDLA_CMAC_CORE_mac_6 NV_NVDLA_CMAC_CORE_mac_5 NV_NVDLA_CMAC_CORE_mac_4 NV_NVDLA_CMAC_CORE_mac_3 NV_NVDLA_CMAC_CORE_mac_2 NV_NVDLA_CMAC_CORE_mac_1 NV_NVDLA_CMAC_CORE_mac_0 NV_NVDLA_CMAC_CORE_rt_in NV_NVDLA_CMAC_CORE_rt_out NV_NVDLA_CMAC_CORE_slcg_19 NV_NVDLA_CMAC_CORE_slcg_18 NV_NVDLA_CMAC_CORE_slcg_9 NV_NVDLA_CMAC_CORE_slcg_17 NV_NVDLA_CMAC_CORE_slcg_16 NV_NVDLA_CMAC_CORE_slcg_15 NV_NVDLA_CMAC_CORE_slcg_14 NV_NVDLA_CMAC_CORE_slcg_13 NV_NVDLA_CMAC_CORE_slcg_12 NV_NVDLA_CMAC_CORE_slcg_11 NV_NVDLA_CMAC_CORE_slcg_10 NV_NVDLA_CMAC_CORE_slcg_8 NV_NVDLA_CMAC_CORE_slcg_7 NV_NVDLA_CMAC_CORE_slcg_6 NV_NVDLA_CMAC_CORE_slcg_5 NV_NVDLA_CMAC_CORE_slcg_4 NV_NVDLA_CMAC_CORE_slcg_3 NV_NVDLA_CMAC_CORE_slcg_2 NV_NVDLA_CMAC_CORE_slcg_1 NV_NVDLA_CMAC_CORE_slcg_0}
+foreach x $values {
+    puts "$x"
+}
+
+
 set synMsgInfo "Info:"
 set synMsgErr  "Error:"
 set synMsgWarn "Warning:"
@@ -191,6 +197,8 @@ elaborate ${MODULE}
 current_design ${MODULE}
 
 source -echo -verbose ${SCRIPTS_DIR}/set_switching.tcl
+
+create_clock nvdla_core_clk -period 100 
 
 # Libraries for physical synthesis
 # remove mw first
@@ -452,6 +460,9 @@ if {[shell_is_in_topographical_mode] && ${SYN_MODE} == "dcg" && ![shell_is_in_ex
 puts "${synMsgInfo} Structuring from scratch with compile command: $compile_command"
 eval $compile_command
 
+
+
+
 # Dump database and generate reports 
 write -f ddc -hier -o ${DB_DIR}/${MODULE}.preincr.ddc
 writeReports "preincr"
@@ -474,10 +485,12 @@ if {![shell_is_in_exploration_mode]} {
 # Run area recovery
 if {![shell_is_in_exploration_mode]} {
     if {[info exists AREA_RECOVERY] && $AREA_RECOVERY ==1 } {
-	     ungroup -all -flatten  
+	    #  ungroup -all -flatten  
 	     optimize_netlist -area
     }
 }
+
+
 
 # Dump all design collaterals
 write -f ddc -hier -o ${DB_DIR}/${MODULE}.ddc
@@ -493,6 +506,19 @@ writeReports "final"
 redirect ${REPORT_DIR}/${MODULE}.check_design { check_design }
 redirect ${REPORT_DIR}/${MODULE}.check_timing { check_timing }
 redirect ${REPORT_DIR}/${MODULE}.switching { get_switching_activity [get_ports] }
+redirect ${REPORT_DIR}/${MODULE}.report_area { report_area -hierarchy -physical -nosplit }
+redirect ${REPORT_DIR}/${MODULE}.report_power { report_power -nosplit -hier }
+
+
+
+# set values {NV_NVDLA_CMAC_CORE_active NV_NVDLA_CMAC_CORE_cfg NV_NVDLA_CMAC_CORE_mac_7 NV_NVDLA_CMAC_CORE_mac_6 NV_NVDLA_CMAC_CORE_mac_5 NV_NVDLA_CMAC_CORE_mac_4 NV_NVDLA_CMAC_CORE_mac_3 NV_NVDLA_CMAC_CORE_mac_2 NV_NVDLA_CMAC_CORE_mac_1 NV_NVDLA_CMAC_CORE_mac_0 NV_NVDLA_CMAC_CORE_rt_in NV_NVDLA_CMAC_CORE_rt_out NV_NVDLA_CMAC_CORE_slcg_19 NV_NVDLA_CMAC_CORE_slcg_18 NV_NVDLA_CMAC_CORE_slcg_9 NV_NVDLA_CMAC_CORE_slcg_17 NV_NVDLA_CMAC_CORE_slcg_16 NV_NVDLA_CMAC_CORE_slcg_15 NV_NVDLA_CMAC_CORE_slcg_14 NV_NVDLA_CMAC_CORE_slcg_13 NV_NVDLA_CMAC_CORE_slcg_12 NV_NVDLA_CMAC_CORE_slcg_11 NV_NVDLA_CMAC_CORE_slcg_10 NV_NVDLA_CMAC_CORE_slcg_8 NV_NVDLA_CMAC_CORE_slcg_7 NV_NVDLA_CMAC_CORE_slcg_6 NV_NVDLA_CMAC_CORE_slcg_5 NV_NVDLA_CMAC_CORE_slcg_4 NV_NVDLA_CMAC_CORE_slcg_3 NV_NVDLA_CMAC_CORE_slcg_2 NV_NVDLA_CMAC_CORE_slcg_1 NV_NVDLA_CMAC_CORE_slcg_0}
+# foreach x $values {
+#     current_design $x
+#     redirect ${REPORT_DIR}/${x}.switching { get_switching_activity [get_ports] }
+# }
+
+
+source -echo -verbose ${SCRIPTS_DIR}/report_timing.tcl
 
 # Stop recording the SVF. 
 set_svf -off

@@ -152,5 +152,5 @@ do
     COMMAND_PREFIX_PATCHED="${COMMAND_PREFIX/\<MODULE\>/$module}"
     COMMAND_PREFIX_PATCHED="${COMMAND_PREFIX_PATCHED/\<LOG\>/$LOG_DIR}"
     echo $COMMAND_PREFIX_PATCHED $DC_PATH/dc_shell -no_gui -f $BUILD_NAME/scripts/dc_run.tcl 
-    $COMMAND_PREFIX_PATCHED $DC_PATH/dc_shell -no_gui -f $BUILD_NAME/scripts/dc_run.tcl 
+    $COMMAND_PREFIX_PATCHED $DC_PATH/dc_shell -no_gui -f $BUILD_NAME/scripts/dc_run.tcl | tee $LOG_DIR/log.txt
 done

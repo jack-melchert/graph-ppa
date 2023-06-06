@@ -258,6 +258,8 @@ def main():
     graph_to_dot(graph, f"outputs/graphs/{graph_name}_flattened.dot")
     simplify_graph(graph)
 
+    print_simplified_graph(graph)
+
     run_synth(graph, args.flist, args.include)
 
 
