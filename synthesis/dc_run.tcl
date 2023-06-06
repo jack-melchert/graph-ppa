@@ -192,6 +192,8 @@ current_design ${MODULE}
 
 source -echo -verbose ${SCRIPTS_DIR}/set_switching.tcl
 
+create_clock nvdla_core_clk -period 100
+
 # Libraries for physical synthesis
 # remove mw first
 if {[shell_is_in_exploration_mode]} {
@@ -474,7 +476,7 @@ if {![shell_is_in_exploration_mode]} {
 # Run area recovery
 if {![shell_is_in_exploration_mode]} {
     if {[info exists AREA_RECOVERY] && $AREA_RECOVERY ==1 } {
-	     ungroup -all -flatten  
+	    #  ungroup -all -flatten  
 	     optimize_netlist -area
     }
 }
@@ -493,6 +495,9 @@ writeReports "final"
 redirect ${REPORT_DIR}/${MODULE}.check_design { check_design }
 redirect ${REPORT_DIR}/${MODULE}.check_timing { check_timing }
 redirect ${REPORT_DIR}/${MODULE}.switching { get_switching_activity [get_ports] }
+redirect ${REPORT_DIR}/${MODULE}.report_area { report_area -hierarchy -physical -nosplit }
+redirect ${REPORT_DIR}/${MODULE}.report_power { report_power -nosplit -hier }
+
 
 # Stop recording the SVF. 
 set_svf -off
