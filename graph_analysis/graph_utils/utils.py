@@ -3,6 +3,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pygraphviz
 
+op_costs = {}
 
 def graph_to_dot(graph, outfilename):
     nx.drawing.nx_agraph.write_dot(graph, outfilename)
