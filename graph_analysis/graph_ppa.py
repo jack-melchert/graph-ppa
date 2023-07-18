@@ -245,6 +245,7 @@ def main():
         "-l", "--flist", help="filelist used for synthesis", required=True
     )
     parser.add_argument("-i", "--include", help="include path for verilog synthesis")
+    parser.add_argument("--libs", help="include path for verilog libraries")
     parser.add_argument(
         "-f", "--flatten", help="flatten level, default 0", type=int, default=0
     )
@@ -258,7 +259,7 @@ def main():
     graph_to_dot(graph, f"outputs/graphs/{graph_name}_flattened.dot")
     simplify_graph(graph)
 
-    run_synth(graph, args.flist, args.include)
+    run_synth(graph, args.flist, args.include, args.libs)
 
 
 if __name__ == "__main__":

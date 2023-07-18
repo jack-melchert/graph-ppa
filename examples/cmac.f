@@ -1,0 +1,14 @@
+/aha/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_CORE_active.v
+/aha/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_CORE_cfg.v
+/aha/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_CORE_MAC_exp.v
+/aha/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_CORE_MAC_mul.v
+/aha/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_CORE_MAC_nan.v
+/aha/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_CORE_mac.v
+/aha/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_CORE_rt_in.v
+/aha/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_CORE_rt_out.v
+/aha/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_CORE_slcg.v
+/aha/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_core.v
+/aha/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_REG_dual.v
+/aha/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_REG_single.v
+/aha/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_reg.v
+/aha/graph-ppa/examples/nvdla/cmac/NV_NVDLA_cmac.v
