@@ -1,4 +1,4 @@
-current_design NV_NVDLA_PDP_CORE_preproc
+current_design NV_NVDLA_PDP_core
 set clk_name clk
 set clk_port_name clk
 set clk_period 100 

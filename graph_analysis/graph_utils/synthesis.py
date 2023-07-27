@@ -85,15 +85,16 @@ def node_synth(node, switching, flist, include, libs):
 
     # Run synthesis
     start = time.time()
-    subprocess.check_call(["make", "synth"], cwd=openroad_location + "/flow")
+    subprocess.check_call(["make", "synth", "DESIGN_CONFIG=/aha/graph-ppa/graph_analysis/graph_utils/../../openroad_synth/config.mk"], cwd=openroad_location + "/flow")
+    subprocess.check_call(["make", "do-2_1_floorplan", "DESIGN_CONFIG=/aha/graph-ppa/graph_analysis/graph_utils/../../openroad_synth/config.mk"], cwd=openroad_location + "/flow")
     end = time.time()
 
     return end - start
 
 
-def parse_node_synth(mod, filename):
+def parse_node_synth(mod, area_report, power_report):
 
-    fin = open(filename, "r")
+    fin = open(area_report, "r")
     name = None
     area = None
     leakage_power = None
@@ -105,46 +106,53 @@ def parse_node_synth(mod, filename):
         if "Chip area for module" in line:
             area = float(line.strip().split()[-1])
 
+    fin.close()
+    fin = open(power_report, "r")
 
-        if "Cell Leakage Power" in line:
-            if "m" in line.split()[5]:
-                leakage_power = float(line.split()[4]) * 10**-3
-            elif "u" in line.split()[5]:
-                leakage_power = float(line.split()[4]) * 10**-6
-            elif "n" in line.split()[5]:
-                leakage_power = float(line.split()[4]) * 10**-9
-            elif "p" in line.split()[5]:
-                leakage_power = float(line.split()[4]) * 10**-12
-            elif "f" in line.split()[5]:
-                leakage_power = float(line.split()[4]) * 10**-15
-            elif line.split()[5].strip() == "W":
-                leakage_power = float(line.split()[4])
-            else:
-                assert False, f"Did not recognize leakage power result in {line}"
+    for line in fin.readlines():
+        if "Total" == line[0:5]:
+            leakage_power = float(line.strip().split()[3])
+            switching_power = float(line.strip().split()[1]) + float(line.strip().split()[2])
+        #     if "m" in line.split()[5]:
+        #         leakage_power = float(line.split()[4]) * 10**-3
+        #     elif "u" in line.split()[5]:
+        #         leakage_power = float(line.split()[4]) * 10**-6
+        #     elif "n" in line.split()[5]:
+        #         leakage_power = float(line.split()[4]) * 10**-9
+        #     elif "p" in line.split()[5]:
+        #         leakage_power = float(line.split()[4]) * 10**-12
+        #     elif "f" in line.split()[5]:
+        #         leakage_power = float(line.split()[4]) * 10**-15
+        #     elif line.split()[5].strip() == "W":
+        #         leakage_power = float(line.split()[4])
+        #     else:
+        #         assert False, f"Did not recognize leakage power result in {line}"
 
-        if "Total Dynamic Power" in line:
-            if "m" in line.split()[5]:
-                switching_power = float(line.split()[4]) * 10**-3
-            elif "u" in line.split()[5]:
-                switching_power = float(line.split()[4]) * 10**-6
-            elif "n" in line.split()[5]:
-                switching_power = float(line.split()[4]) * 10**-9
-            elif "p" in line.split()[5]:
-                switching_power = float(line.split()[4]) * 10**-12
-            elif "f" in line.split()[5]:
-                switching_power = float(line.split()[4]) * 10**-15
-            elif line.split()[5].strip() == "W":
-                switching_power = float(line.split()[4])
-            else:
-                assert False, f"Did not recognize dynamic power result in {line}"
+        # if "Total Dynamic Power" in line:
+        #     if "m" in line.split()[5]:
+        #         switching_power = float(line.split()[4]) * 10**-3
+        #     elif "u" in line.split()[5]:
+        #         switching_power = float(line.split()[4]) * 10**-6
+        #     elif "n" in line.split()[5]:
+        #         switching_power = float(line.split()[4]) * 10**-9
+        #     elif "p" in line.split()[5]:
+        #         switching_power = float(line.split()[4]) * 10**-12
+        #     elif "f" in line.split()[5]:
+        #         switching_power = float(line.split()[4]) * 10**-15
+        #     elif line.split()[5].strip() == "W":
+        #         switching_power = float(line.split()[4])
+        #     else:
+        #         assert False, f"Did not recognize dynamic power result in {line}"
 
-    # if (
-    #     name is None
-    #     or area is None
-    #     or leakage_power is None
-    #     or switching_power is None
-    # ):
-    #     assert False, f"Synthesis reports are not complete for node {mod}"
+    fin.close()
+    if (
+        name is None
+        or area is None
+        or leakage_power is None
+        or switching_power is None
+    ):
+        breakpoint()
+        # assert False, f"Synthesis reports are not complete for node {mod}"
 
     assert name == mod, f"{name} did not match {mod}"
 
@@ -152,7 +160,6 @@ def parse_node_synth(mod, filename):
 
     return {
         "area": area,
-        "compile_time": time,
         "leakage_power": leakage_power,
         "switching_power": switching_power,
     }
@@ -168,8 +175,8 @@ def sort_nodes(graph):
 def calculate_area_power(graph, node_info):
     area_set = set()
     total_area = 0
-    # total_leakage_power = 0
-    # total_switching_power = 0
+    total_leakage_power = 0
+    total_switching_power = 0
     for node, data in graph.nodes(data=True):
         if is_module(data):
             bw = 1
@@ -183,10 +190,10 @@ def calculate_area_power(graph, node_info):
 
             if l in node_info:
                 total_area += node_info[l]["area"]
-                # total_leakage_power += node_info[l]["leakage_power"]
+                total_leakage_power += node_info[l]["leakage_power"]
                 # if node_info[l]["switching_power"] is None:
                 #     node_info[l]["switching_power"] = 0.0
-                # total_switching_power += node_info[l]["switching_power"]
+                total_switching_power += node_info[l]["switching_power"]
                 area_set.add(l)
 
     compile_time = 0
@@ -195,8 +202,8 @@ def calculate_area_power(graph, node_info):
         compile_time += node_info[s]["compile_time"]
 
     print("Total Predictied Area:", total_area)
-    # print("Total Predictied leakage_power:", total_leakage_power)
-    # print("Total Predictied switching power:", total_switching_power)
+    print("Total Predictied leakage_power:", total_leakage_power)
+    print("Total Predictied switching power:", total_switching_power)
     print("Total Predictied Compile Time:", compile_time)
 
 
@@ -242,9 +249,10 @@ def run_synth(graph, flist, include, libs):
                 # folder = dirs[-1]
                 # synth_file = glob.glob(folder + "/report/*final.report")[-1]
                 synth_report = openroad_location + f"/flow/reports/nangate45/{mod}/base/synth_stat.txt"
+                power_report = openroad_location + f"/flow/logs/nangate45/{mod}/base/2_1_floorplan.log"
                 # switching_file = glob.glob(folder + "/report/*.switching")[-1]
 
-                node_info[mod] = parse_node_synth(mod, synth_report)
+                node_info[mod] = parse_node_synth(mod, synth_report, power_report)
                 node_info[mod]["compile_time"] = synth_time
                 # switching = parse_switching(switching_file)
 
