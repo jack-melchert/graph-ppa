@@ -1,0 +1,14 @@
+/nobackup/melchert/qualcomm/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_CORE_active.v
+/nobackup/melchert/qualcomm/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_CORE_cfg.v
+/nobackup/melchert/qualcomm/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_CORE_MAC_exp.v
+/nobackup/melchert/qualcomm/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_CORE_MAC_mul.v
+/nobackup/melchert/qualcomm/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_CORE_MAC_nan.v
+/nobackup/melchert/qualcomm/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_CORE_mac.v
+/nobackup/melchert/qualcomm/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_CORE_rt_in.v
+/nobackup/melchert/qualcomm/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_CORE_rt_out.v
+/nobackup/melchert/qualcomm/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_CORE_slcg.v
+/nobackup/melchert/qualcomm/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_core.v
+/nobackup/melchert/qualcomm/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_REG_dual.v
+/nobackup/melchert/qualcomm/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_REG_single.v
+/nobackup/melchert/qualcomm/graph-ppa/examples/nvdla/cmac/NV_NVDLA_CMAC_reg.v
+/nobackup/melchert/qualcomm/graph-ppa/examples/nvdla/cmac/NV_NVDLA_cmac.v

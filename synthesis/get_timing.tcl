@@ -1,0 +1,1 @@
+report_timing -from [get_ports -filter {@port_direction == in}] -to [get_ports -filter {@port_direction == out}] -path_type short

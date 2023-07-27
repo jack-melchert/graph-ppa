@@ -498,6 +498,7 @@ redirect ${REPORT_DIR}/${MODULE}.switching { get_switching_activity [get_ports] 
 redirect ${REPORT_DIR}/${MODULE}.report_area { report_area -hierarchy -physical -nosplit }
 redirect ${REPORT_DIR}/${MODULE}.report_power { report_power -nosplit -hier }
 
+redirect ${REPORT_DIR}/${MODULE}.timing { source -echo -verbose ${SCRIPTS_DIR}/report_timing.tcl }
 
 # Stop recording the SVF. 
 set_svf -off
